@@ -1,0 +1,14 @@
+<configuration>
+  <property>
+    <name>dfs.client.use.datanode.hostname</name>
+    <value>true</value>
+  </property>
+<property>
+  <name>dfs.datanode.data.dir</name>
+  <value>/hadoop/data</value> <!-- Must match container volume -->
+</property>
+<property>
+  <name>dfs.datanode.address</name>
+  <value>0.0.0.0:9866</value>
+</property>
+</configuration>

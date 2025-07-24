@@ -1,0 +1,113 @@
+version: '3'
+
+services:
+  namenode:
+    build: ./hadoop-base
+    container_name: namenode
+    hostname: namenode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      - CLUSTER_NAME=hadoop-cluster
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - namenode-data:/hadoop/dfs/name
+      - ./imagens:/data/imagens  # Mount local images dir
+      - ./resultados:/data/resultados  # Mount local results dir
+      - ./hadoop-mapreduce:/opt/hadoop/jobs  # Mount directory with your JARs
+    command: /opt/hadoop/scripts/start-namenode.sh
+
+  datanode1:
+    build: ./hadoop-base
+    container_name: datanode1
+    hostname: datanode1
+    depends_on:
+      - namenode
+    environment:
+      - NAMENODE_HOST=namenode
+      - HADOOP_HOME=/opt/hadoop
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - datanode1-data:/hadoop/dfs/data
+    command: /opt/hadoop/scripts/start-datanode.sh
+    healthcheck:
+      test: ["CMD", "jps"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  datanode2:
+    build: ./hadoop-base
+    container_name: datanode2
+    hostname: datanode2
+    depends_on:
+      - namenode
+    environment:
+      - NAMENODE_HOST=namenode
+      - HADOOP_HOME=/opt/hadoop
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - datanode2-data:/hadoop/dfs/data
+    command: /opt/hadoop/scripts/start-datanode.sh
+    healthcheck:
+      test: ["CMD", "jps"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  datanode3:
+    build: ./hadoop-base
+    container_name: datanode3
+    hostname: datanode3
+    depends_on:
+      - namenode
+    environment:
+      - NAMENODE_HOST=namenode
+      - HADOOP_HOME=/opt/hadoop
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - datanode3-data:/hadoop/dfs/data
+    command: /opt/hadoop/scripts/start-datanode.sh
+    healthcheck:
+      test: ["CMD", "jps"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  resourcemanager:
+    build: ./hadoop-base
+    container_name: resourcemanager
+    hostname: resourcemanager  # Must match yarn.resourcemanager.hostname
+    ports:
+      - "8031:8031"  # ResourceTracker (critical for NodeManager)
+      - "8032:8032"  # ResourceManager
+      - "8088:8088"  # Web UI
+    environment:
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    command: >
+      bash -c "yarn --daemon start resourcemanager &&
+              tail -f /opt/hadoop/logs/*.log"
+
+  nodemanager1:
+    build: ./hadoop-base
+    container_name: nodemanager1
+    hostname: nodemanager1
+    depends_on:
+      - resourcemanager
+    environment:
+      - RESOURCEMANAGER_HOST=resourcemanager
+    command: >
+      bash -c "yarn --daemon start nodemanager &&
+              tail -f /opt/hadoop/logs/*.log"
+
+volumes:
+  namenode-data:
+  datanode1-data:
+  datanode2-data:
+  datanode3-data:
+
+networks:
+  default:
+    name: hadoop-network
+    driver: bridge

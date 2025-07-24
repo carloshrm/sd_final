@@ -1,0 +1,1 @@
+Front-end para um sistema de processamento de imagens utilizando o Apache Hadoop.
